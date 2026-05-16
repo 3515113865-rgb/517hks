@@ -600,6 +600,8 @@
           <span id="periodLabel">此刻</span>
           <span style="opacity: 0.62">·</span>
           <span id="periodTime">--:--</span>
+          <span style="opacity: 0.62">·</span>
+          <span id="userIdText">ID：未设置</span>
         </div>
         <a class="back" href="./index.html" aria-label="返回到首页">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1065,7 +1067,8 @@
           },
         };
 
-        var STORAGE_PERSONA = "dy_persona_v1";
+        var STORAGE_ACTIVE_USER = "dy_active_user_v1";
+        var BASE_PERSONA = "dy_persona_v1";
 
         function loadJSON(key, fallback) {
           try {
@@ -1075,6 +1078,21 @@
           } catch (e) {
             return fallback;
           }
+        }
+
+        function loadActiveUserId() {
+          var obj = loadJSON(STORAGE_ACTIVE_USER, null);
+          return obj && obj.userId ? String(obj.userId) : "";
+        }
+
+        function personaStoreKeyForUser(userId) {
+          return userId ? BASE_PERSONA + "::" + userId : BASE_PERSONA;
+        }
+
+        function setUserIdChip(userId) {
+          var node = el("userIdText");
+          if (!node) return;
+          node.textContent = userId ? "ID：" + userId : "ID：未设置";
         }
 
         function getPeriodByHour(hour) {
@@ -1317,7 +1335,9 @@
         function refresh() {
           var now = new Date();
           var periodKey = getPeriodByHour(now.getHours());
-          var store = loadJSON(STORAGE_PERSONA, null);
+          var userId = loadActiveUserId();
+          setUserIdChip(userId);
+          var store = loadJSON(personaStoreKeyForUser(userId), null);
           var latest = store && store.latest;
           if (latest && latest.persona) render(latest.periodKey || periodKey, latest);
           else render(periodKey, null);

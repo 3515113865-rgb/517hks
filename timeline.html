@@ -413,6 +413,8 @@
             <span id="periodLabel">此刻</span>
             <span style="opacity: 0.62">·</span>
             <span id="periodTime">--:--</span>
+            <span style="opacity: 0.62">·</span>
+            <span id="userIdText">ID：未设置</span>
           </div>
           <a class="back" href="./index.html" aria-label="返回到首页">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -530,7 +532,8 @@
           midnight: { label: "真实面暴露区", range: "00:00-04:00", className: "period-midnight" },
         };
 
-        var STORAGE_PERSONA = "dy_persona_v1";
+        var STORAGE_ACTIVE_USER = "dy_active_user_v1";
+        var BASE_PERSONA = "dy_persona_v1";
 
         function loadJSON(key, fallback) {
           try {
@@ -540,6 +543,21 @@
           } catch (e) {
             return fallback;
           }
+        }
+
+        function loadActiveUserId() {
+          var obj = loadJSON(STORAGE_ACTIVE_USER, null);
+          return obj && obj.userId ? String(obj.userId) : "";
+        }
+
+        function personaStoreKeyForUser(userId) {
+          return userId ? BASE_PERSONA + "::" + userId : BASE_PERSONA;
+        }
+
+        function setUserIdChip(userId) {
+          var node = el("userIdText");
+          if (!node) return;
+          node.textContent = userId ? "ID：" + userId : "ID：未设置";
         }
 
         function pad2(n) {
@@ -581,7 +599,8 @@
 
         function buildEntries() {
           var now = new Date();
-          var store = loadJSON(STORAGE_PERSONA, null);
+          var userId = loadActiveUserId();
+          var store = loadJSON(personaStoreKeyForUser(userId), null);
           var history = store && store.history;
           if (Array.isArray(history) && history.length) {
             var out = [];
@@ -701,6 +720,7 @@
           document.body.className = info.className;
           setText("periodLabel", info.label);
           setText("periodTime", info.range);
+          setUserIdChip(loadActiveUserId());
         }
 
         function highlightTabs() {

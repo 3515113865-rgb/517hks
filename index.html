@@ -124,6 +124,132 @@
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 8px 16px rgba(0, 0, 0, 0.32);
       }
 
+      .cover {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.38), transparent 50%),
+          radial-gradient(circle at 86% 18%, rgba(236, 72, 153, 0.32), transparent 48%),
+          radial-gradient(circle at 78% 82%, rgba(59, 130, 246, 0.22), transparent 52%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.60), rgba(0, 0, 0, 0.78));
+        backdrop-filter: blur(10px);
+      }
+
+      .cover.off {
+        display: none;
+      }
+
+      .cover-card {
+        width: min(360px, 100%);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(20, 20, 20, 0.72);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        padding: 16px 16px 14px;
+        transform: translateY(0);
+        animation: coverIn 520ms cubic-bezier(0.2, 0.9, 0.2, 1);
+      }
+
+      @keyframes coverIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .cover-title {
+        margin: 0 0 8px;
+        font-size: 16px;
+        line-height: 1.25;
+        font-weight: 750;
+        letter-spacing: 0.2px;
+      }
+
+      .cover-sub {
+        margin: 0 0 14px;
+        font-size: 12px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .cover-label {
+        display: block;
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.86);
+        letter-spacing: 0.2px;
+      }
+
+      .cover-input {
+        width: 100%;
+        height: 44px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.92);
+        padding: 0 12px;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .cover-input:focus {
+        border-color: rgba(255, 255, 255, 0.28);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+      }
+
+      .cover-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .cover-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        backdrop-filter: blur(10px);
+      }
+
+      .cover-btn:active {
+        transform: scale(0.98);
+      }
+
+      .cover-btn.primary {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.96);
+        font-weight: 700;
+      }
+
+      .cover-hint {
+        margin-top: 10px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .cover-tip {
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(255, 204, 0, 0.92);
+        min-height: 16px;
+      }
+
       .hint {
         position: absolute;
         left: 50%;
@@ -180,6 +306,11 @@
         stroke-width: 2;
         stroke-linecap: round;
         stroke-linejoin: round;
+      }
+
+      .btn.on {
+        background: rgba(255, 255, 255, 0.22);
+        border-color: rgba(255, 255, 255, 0.18);
       }
 
       .btn.like.on {
@@ -479,7 +610,7 @@
                   />
                 </svg>
               </div>
-              <div class="count" id="likeCount">12.4k</div>
+              <div class="count" id="likeCount"></div>
             </div>
             <div>
               <div class="btn" id="commentBtn" role="button" aria-label="评论">
@@ -487,7 +618,7 @@
                   <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
                 </svg>
               </div>
-              <div class="count" id="commentCount">892</div>
+              <div class="count" id="commentCount"></div>
             </div>
             <div>
               <div class="btn save" id="saveBtn" role="button" aria-label="收藏">
@@ -495,7 +626,7 @@
                   <path d="M6 3h12a1 1 0 0 1 1 1v18l-7-4-7 4V4a1 1 0 0 1 1-1z" />
                 </svg>
               </div>
-              <div class="count" id="shareCount">543</div>
+              <div class="count" id="shareCount"></div>
             </div>
             <div>
               <div class="btn" id="shareBtn" role="button" aria-label="分享">
@@ -505,7 +636,7 @@
                   <path d="M7 8l5-5 5 5" />
                 </svg>
               </div>
-              <div class="count" id="shareCount2">321</div>
+              <div class="count" id="shareCount2"></div>
             </div>
           </div>
 
@@ -546,6 +677,21 @@
             </div>
           </div>
         </div>
+
+        <div class="cover" id="cover" aria-hidden="false">
+          <div class="cover-card">
+            <div class="cover-title">今天用哪个 ID 刷出你的潜在人格？</div>
+            <p class="cover-sub">输入 ID 后，点赞/收藏/人格历史会与 ID 绑定，下次还能在当日测评与时间轴找到自己。</p>
+            <label class="cover-label" for="userIdInput">你的 ID</label>
+            <input class="cover-input" id="userIdInput" autocomplete="off" spellcheck="false" />
+            <div class="cover-actions">
+              <button class="cover-btn primary" id="startBtn" type="button">开始刷视频</button>
+              <button class="cover-btn" id="randomBtn" type="button">随机一个 ID</button>
+            </div>
+            <div class="cover-hint">支持中英文/数字/_/-，最多 20 个字</div>
+            <div class="cover-tip" id="coverTip"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -573,22 +719,6 @@
           "人格玄学-1.mp4",
           "人格玄学-2.mp4",
         ];
-
-        function loadJSONEarly(key, fallback) {
-          try {
-            var raw = localStorage.getItem(key);
-            if (!raw) return fallback;
-            return JSON.parse(raw);
-          } catch (e) {
-            return fallback;
-          }
-        }
-
-        var STORAGE_INTERACTIONS = "dy_interactions_v1";
-        var STORAGE_PERSONA = "dy_persona_v1";
-        var persistedEarly = loadJSONEarly(STORAGE_INTERACTIONS, { liked: {}, saved: {} });
-        var likedEarly = (persistedEarly && persistedEarly.liked) || Object.create(null);
-        var savedEarly = (persistedEarly && persistedEarly.saved) || Object.create(null);
 
         function pickOne(arr) {
           return arr[Math.floor(Math.random() * arr.length)];
@@ -621,19 +751,10 @@
           return shuffle(picked);
         }
 
-        function buildRoundFiltered(files) {
-          var available = [];
+        function buildRoundFiltered(files, likedMap, savedMap) {
+          var groups = Object.create(null);
           for (var i = 0; i < files.length; i++) {
             var f = files[i];
-            if (likedEarly[f] || savedEarly[f]) continue;
-            available.push(f);
-          }
-
-          if (!available.length) return buildRound(files);
-
-          var groups = Object.create(null);
-          for (var i = 0; i < available.length; i++) {
-            var f = available[i];
             var prefix = (f.split("-")[0] || "视频").trim();
             if (!groups[prefix]) groups[prefix] = [];
             groups[prefix].push(f);
@@ -641,21 +762,16 @@
 
           var keys = Object.keys(groups);
           var picked = [];
+
           for (var k = 0; k < keys.length; k++) {
-            picked.push(pickOne(groups[keys[k]]));
-          }
-
-          var used = Object.create(null);
-          for (var i = 0; i < picked.length; i++) used[picked[i]] = true;
-          var pool = [];
-          for (var i = 0; i < available.length; i++) if (!used[available[i]]) pool.push(available[i]);
-
-          while (picked.length < 10 && pool.length) {
-            var pick = pickOne(pool);
-            picked.push(pick);
-            pool = pool.filter(function (x) {
-              return x !== pick;
-            });
+            var list = groups[keys[k]];
+            var candidates = [];
+            for (var j = 0; j < list.length; j++) {
+              var it = list[j];
+              if ((likedMap && likedMap[it]) || (savedMap && savedMap[it])) continue;
+              candidates.push(it);
+            }
+            picked.push(pickOne(candidates.length ? candidates : list));
           }
 
           return shuffle(picked);
@@ -684,9 +800,6 @@
           };
         }
 
-        var roundFiles = buildRoundFiltered(files);
-        var data = roundFiles.map(makeItem);
-
         var stage = document.getElementById("stage");
         var player = document.getElementById("player");
         var actions = document.querySelector(".actions");
@@ -696,6 +809,8 @@
         var tagsEl = document.getElementById("tags");
         var likeBtn = document.getElementById("likeBtn");
         var saveBtn = document.getElementById("saveBtn");
+        var commentBtn = document.getElementById("commentBtn");
+        var shareBtn = document.getElementById("shareBtn");
         var likeCount = document.getElementById("likeCount");
         var commentCount = document.getElementById("commentCount");
         var shareCount = document.getElementById("shareCount");
@@ -712,6 +827,11 @@
         var personaInsight = document.getElementById("personaInsight");
         var personaDesc = document.getElementById("personaDesc");
         var personaImg = document.getElementById("personaImg");
+        var cover = document.getElementById("cover");
+        var userIdInput = document.getElementById("userIdInput");
+        var startBtn = document.getElementById("startBtn");
+        var randomBtn = document.getElementById("randomBtn");
+        var coverTip = document.getElementById("coverTip");
 
         function loadJSON(key, fallback) {
           try {
@@ -729,14 +849,67 @@
           } catch (e) {}
         }
 
-        var persisted = persistedEarly || loadJSON(STORAGE_INTERACTIONS, { liked: {}, saved: {} });
+        var STORAGE_ACTIVE_USER = "dy_active_user_v1";
+        var BASE_INTERACTIONS = "dy_interactions_v1";
+        var BASE_PERSONA = "dy_persona_v1";
+        var AUTO_START_RETURN = "dy_autostart_return_v1";
+        var activeUserId = "";
+        var interactionsKey = "";
+        var personaKey = "";
+        var started = false;
+        var autoStartPending = false;
 
+        function normalizeUserId(s) {
+          var v = String(s || "").trim();
+          if (!v) return "";
+          if (v.length > 20) return "";
+          if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{1,20}$/.test(v)) return "";
+          return v;
+        }
+
+        function keyFor(base, userId) {
+          return base + "::" + userId;
+        }
+
+        function loadActiveUserId() {
+          var obj = loadJSON(STORAGE_ACTIVE_USER, null);
+          return obj && obj.userId ? String(obj.userId) : "";
+        }
+
+        function saveActiveUserId(userId) {
+          saveJSON(STORAGE_ACTIVE_USER, { userId: userId, setAt: Date.now() });
+        }
+
+        function migrateLegacyIfNeeded(userId) {
+          var newInterKey = keyFor(BASE_INTERACTIONS, userId);
+          var newPersonaKey = keyFor(BASE_PERSONA, userId);
+
+          if (!localStorage.getItem(newInterKey)) {
+            var legacyInter = loadJSON(BASE_INTERACTIONS, null);
+            if (legacyInter && typeof legacyInter === "object") saveJSON(newInterKey, legacyInter);
+          }
+
+          if (!localStorage.getItem(newPersonaKey)) {
+            var legacyPersona = loadJSON(BASE_PERSONA, null);
+            if (legacyPersona && typeof legacyPersona === "object") saveJSON(newPersonaKey, legacyPersona);
+          }
+        }
+
+        function randomUserId() {
+          return "u" + String(Math.floor(100000 + Math.random() * 900000));
+        }
+
+        var data = [];
         var idx = 0;
-        var liked = likedEarly || (persisted && persisted.liked) || Object.create(null);
-        var saved = savedEarly || (persisted && persisted.saved) || Object.create(null);
+        var historyLiked = Object.create(null);
+        var historySaved = Object.create(null);
+        var liked = Object.create(null);
+        var saved = Object.create(null);
         var touchStartY = 0;
         var touchEndY = 0;
         var modalOpen = false;
+        var commented = Object.create(null);
+        var shared = Object.create(null);
 
         var PERSONA_IMAGES = {
           m1: "今天一定重新做人型.png",
@@ -850,7 +1023,22 @@
           return perCat[cat];
         }
 
+        function resetSession() {
+          sessionStartedAt = Date.now();
+          currentViewStartedAt = Date.now();
+          playedSince = 0;
+          totalDwellMs = 0;
+          totalWatchMs = 0;
+          swipeIntervals = [];
+          lastSwipeAt = 0;
+          backSwipeCount = 0;
+          perCat = Object.create(null);
+          commented = Object.create(null);
+          shared = Object.create(null);
+        }
+
         function finalizeCurrentView() {
+          if (!started) return;
           var now = Date.now();
           var item = data[idx];
           if (!item) return;
@@ -868,6 +1056,7 @@
         }
 
         function enterView() {
+          if (!started) return;
           currentViewStartedAt = Date.now();
           var item = data[idx];
           if (!item) return;
@@ -875,10 +1064,12 @@
         }
 
         player.addEventListener("play", function () {
+          if (!started) return;
           if (!playedSince) playedSince = Date.now();
         });
 
         player.addEventListener("pause", function () {
+          if (!started) return;
           if (!playedSince) return;
           var now = Date.now();
           var item = data[idx];
@@ -890,6 +1081,7 @@
         });
 
         player.addEventListener("ended", function () {
+          if (!started) return;
           if (!playedSince) return;
           var now = Date.now();
           var item = data[idx];
@@ -928,7 +1120,11 @@
 
         function updatePersonaEntry() {
           if (!personaEntry) return;
-          var store = loadJSON(STORAGE_PERSONA, null);
+          if (!personaKey) {
+            personaEntry.classList.remove("has");
+            return;
+          }
+          var store = loadJSON(personaKey, null);
           var dayKey = getDayKey(Date.now());
           var periodKey = getPeriodByHour(new Date().getHours());
           var existed = findPersonaForDayPeriod(store, dayKey, periodKey);
@@ -1078,7 +1274,7 @@
 
           var loveShare = share("恋爱情感");
           var loveNotDominant = metrics.dominantCat !== "恋爱情感" && loveShare < 0.22;
-          var store = loadJSON(STORAGE_PERSONA, null);
+          var store = personaKey ? loadJSON(personaKey, null) : null;
           var maxOtherLove = 0;
           if (store && Array.isArray(store.history)) {
             for (var i = 0; i < store.history.length; i++) {
@@ -1229,9 +1425,10 @@
         }
 
         function openModal() {
+          if (!started) return;
           if (modalOpen) return;
           finalizeCurrentView();
-          var store = loadJSON(STORAGE_PERSONA, { latest: null, history: [] });
+          var store = loadJSON(personaKey, { latest: null, history: [] });
           if (!store || typeof store !== "object") store = { latest: null, history: [] };
           if (!Array.isArray(store.history)) store.history = [];
 
@@ -1244,7 +1441,7 @@
             store.latest = result;
             store.history.unshift(result);
             store.history = store.history.slice(0, 60);
-            saveJSON(STORAGE_PERSONA, store);
+            saveJSON(personaKey, store);
           }
 
           applyPersonaCard(result);
@@ -1268,11 +1465,13 @@
         function applyInteractions(item) {
           likeBtn.classList.toggle("on", !!liked[item.id]);
           saveBtn.classList.toggle("on", !!saved[item.id]);
+          if (commentBtn) commentBtn.classList.toggle("on", !!commented[item.id]);
+          if (shareBtn) shareBtn.classList.toggle("on", !!shared[item.id]);
 
-          likeCount.textContent = kFormat(item.likes + (liked[item.id] ? 1 : 0));
-          commentCount.textContent = kFormat(item.comments);
-          shareCount.textContent = kFormat(item.shares);
-          shareCount2.textContent = kFormat(item.shares + 88);
+          likeCount.textContent = liked[item.id] ? "1" : "";
+          commentCount.textContent = commented[item.id] ? "1" : "";
+          shareCount.textContent = saved[item.id] ? "1" : "";
+          shareCount2.textContent = shared[item.id] ? "1" : "";
         }
 
         function applyItem(item) {
@@ -1290,6 +1489,7 @@
         }
 
         function go(next) {
+          if (!started) return;
           if (next < 0 || next >= data.length) return;
           finalizeCurrentView();
           idx = next;
@@ -1307,6 +1507,7 @@
         }
 
         function swipe(dir) {
+          if (!started) return;
           if (modalOpen) return;
           if (dir === "up") {
             if (idx >= data.length - 1) {
@@ -1333,6 +1534,7 @@
         });
 
         stage.addEventListener("click", function (e) {
+          if (!started) return;
           if (modalOpen) return;
           if (actions && actions.contains(e.target)) return;
           if (player.paused) {
@@ -1343,18 +1545,42 @@
         });
 
         likeBtn.addEventListener("click", function () {
+          if (!started) return;
           var id = data[idx].id;
           liked[id] = !liked[id];
-          saveJSON(STORAGE_INTERACTIONS, { liked: liked, saved: saved });
+          if (liked[id]) historyLiked[id] = true;
+          else delete historyLiked[id];
+          saveJSON(interactionsKey, { liked: historyLiked, saved: historySaved });
           applyInteractions(data[idx]);
         });
 
         saveBtn.addEventListener("click", function () {
+          if (!started) return;
           var id = data[idx].id;
           saved[id] = !saved[id];
-          saveJSON(STORAGE_INTERACTIONS, { liked: liked, saved: saved });
+          if (saved[id]) historySaved[id] = true;
+          else delete historySaved[id];
+          saveJSON(interactionsKey, { liked: historyLiked, saved: historySaved });
           applyInteractions(data[idx]);
         });
+
+        if (commentBtn) {
+          commentBtn.addEventListener("click", function () {
+            if (!started) return;
+            var id = data[idx].id;
+            commented[id] = !commented[id];
+            applyInteractions(data[idx]);
+          });
+        }
+
+        if (shareBtn) {
+          shareBtn.addEventListener("click", function () {
+            if (!started) return;
+            var id = data[idx].id;
+            shared[id] = !shared[id];
+            applyInteractions(data[idx]);
+          });
+        }
 
         personaModal.addEventListener("click", function (e) {
           if (e.target === personaModal) closeModal();
@@ -1365,23 +1591,39 @@
         });
 
         goSpaceBtn.addEventListener("click", function () {
+          try {
+            sessionStorage.setItem(AUTO_START_RETURN, "1");
+          } catch (e) {}
           window.location.href = "./current.html";
         });
+
+        if (personaEntry) {
+          personaEntry.addEventListener("click", function (e) {
+            try {
+              sessionStorage.setItem(AUTO_START_RETURN, "1");
+            } catch (err) {}
+            if (e && e.preventDefault) e.preventDefault();
+            window.location.href = "./current.html";
+          });
+        }
 
         ignoreBtn.addEventListener("click", function () {
           closeModal();
         });
 
         stage.addEventListener("touchstart", function (e) {
+          if (!started) return;
           touchStartY = e.touches[0].clientY;
           touchEndY = 0;
         });
 
         stage.addEventListener("touchmove", function (e) {
+          if (!started) return;
           touchEndY = e.touches[0].clientY;
         });
 
         stage.addEventListener("touchend", function () {
+          if (!started) return;
           if (!touchStartY || !touchEndY) return;
           var d = touchStartY - touchEndY;
           if (d > 50) swipe("up");
@@ -1389,19 +1631,108 @@
         });
 
         stage.addEventListener("wheel", function (e) {
+          if (!started) return;
           if (e.deltaY > 0) swipe("up");
           if (e.deltaY < 0) swipe("down");
         });
 
         window.addEventListener("keydown", function (e) {
+          if (!started) return;
           if (e.key === "ArrowDown") swipe("up");
           if (e.key === "ArrowUp") swipe("down");
         });
 
-        showHint();
-        applyItem(data[idx]);
-        enterView();
-        updatePersonaEntry();
+        function showCoverTip(t) {
+          if (!coverTip) return;
+          coverTip.textContent = t || "";
+        }
+
+        function showCover() {
+          if (!cover) return;
+          cover.classList.remove("off");
+          cover.setAttribute("aria-hidden", "false");
+          showCoverTip("");
+          try {
+            player.pause();
+          } catch (e) {}
+          started = false;
+          modalOpen = false;
+          personaModal.classList.remove("on");
+          personaModal.setAttribute("aria-hidden", "true");
+        }
+
+        function hideCover() {
+          if (!cover) return;
+          cover.classList.add("off");
+          cover.setAttribute("aria-hidden", "true");
+        }
+
+        function startForUser(userId) {
+          activeUserId = userId;
+          interactionsKey = keyFor(BASE_INTERACTIONS, userId);
+          personaKey = keyFor(BASE_PERSONA, userId);
+
+          var persisted = loadJSON(interactionsKey, { liked: {}, saved: {} });
+          historyLiked = (persisted && persisted.liked) || Object.create(null);
+          historySaved = (persisted && persisted.saved) || Object.create(null);
+          liked = Object.create(null);
+          saved = Object.create(null);
+
+          var roundFiles = buildRoundFiltered(files, historyLiked, historySaved);
+          data = roundFiles.map(makeItem);
+          idx = 0;
+          resetSession();
+          hideCover();
+          started = true;
+          applyItem(data[idx]);
+          enterView();
+          updatePersonaEntry();
+          showHint();
+        }
+
+        if (randomBtn) {
+          randomBtn.addEventListener("click", function () {
+            if (!userIdInput) return;
+            userIdInput.value = randomUserId();
+            showCoverTip("");
+            userIdInput.focus();
+          });
+        }
+
+        if (startBtn) {
+          startBtn.addEventListener("click", function () {
+            var id = normalizeUserId(userIdInput ? userIdInput.value : "");
+            if (!id) {
+              showCoverTip("ID 格式不对：支持中英文/数字/_/-，最多 20 个字");
+              return;
+            }
+            saveActiveUserId(id);
+            migrateLegacyIfNeeded(id);
+            startForUser(id);
+          });
+        }
+
+        if (userIdInput) {
+          userIdInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && startBtn) startBtn.click();
+          });
+        }
+
+        if (userIdInput) userIdInput.value = loadActiveUserId();
+        (function () {
+          var id = loadActiveUserId();
+          var auto = false;
+          try {
+            auto = sessionStorage.getItem(AUTO_START_RETURN) === "1";
+          } catch (e) {}
+          if (auto && id) {
+            autoStartPending = true;
+            migrateLegacyIfNeeded(id);
+            startForUser(id);
+            return;
+          }
+          showCover();
+        })();
 
         window.addEventListener("pageshow", function (e) {
           if (e && e.persisted) {
@@ -1410,8 +1741,17 @@
           }
           try {
             var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
-            if (nav && nav.type === "back_forward") window.location.reload();
+            if (nav && nav.type === "back_forward") {
+              window.location.reload();
+              return;
+            }
           } catch (err) {}
+          if (autoStartPending) {
+            autoStartPending = false;
+            try {
+              sessionStorage.removeItem(AUTO_START_RETURN);
+            } catch (e2) {}
+          }
         });
       })();
     </script>
