@@ -1,0 +1,887 @@
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>抖音短视频应用设计（静态版）</title>
+    <style>
+      :root {
+        --bg: #000;
+        --fg: #fff;
+        --muted: rgba(255, 255, 255, 0.72);
+        --muted2: rgba(255, 255, 255, 0.55);
+        --glass: rgba(255, 255, 255, 0.18);
+        --glass2: rgba(255, 255, 255, 0.12);
+        --danger: #ff2d55;
+        --warn: #ffcc00;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+
+      .wrap {
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+
+      .phone {
+        width: 100%;
+        max-width: 420px;
+        height: min(860px, 100vh);
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .stage {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #000;
+      }
+
+      video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+      }
+
+      .shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.62) 100%);
+        pointer-events: none;
+      }
+
+      .topbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        padding: 14px 14px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 3;
+      }
+
+      .counter {
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+      }
+
+      .hint {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%, -50%);
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--muted);
+        font-size: 12px;
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+
+      .hint.on {
+        opacity: 1;
+      }
+
+      .actions {
+        position: absolute;
+        right: 12px;
+        bottom: 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        z-index: 3;
+      }
+
+      .btn {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .btn:active {
+        transform: scale(0.95);
+      }
+
+      .btn svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .btn.like.on {
+        background: rgba(255, 45, 85, 0.88);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .btn.like.on svg {
+        fill: #fff;
+      }
+
+      .btn.save.on {
+        background: rgba(255, 204, 0, 0.85);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .btn.save.on svg {
+        fill: #fff;
+        stroke: #fff;
+      }
+
+      .count {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #fff;
+        text-align: center;
+      }
+
+      .meta {
+        position: absolute;
+        left: 12px;
+        right: 90px;
+        bottom: 18px;
+        z-index: 3;
+      }
+
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        background: radial-gradient(circle at 25% 25%, #a855f7 0%, #ec4899 45%, #fb7185 100%);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+      }
+
+      .handle {
+        font-size: 14px;
+        color: #fff;
+      }
+
+      .caption {
+        font-size: 14px;
+        line-height: 1.4;
+        color: #fff;
+        margin: 0 0 10px;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .tag {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 4px 8px;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+      }
+
+      .footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+        z-index: 3;
+      }
+
+      .pill {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+      }
+
+      .pill b {
+        color: #fff;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .modal {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+      }
+
+      .modal.on {
+        display: flex;
+      }
+
+      .modal-card {
+        width: min(360px, 100%);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(20, 20, 20, 0.72);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+      }
+
+      .modal-head {
+        padding: 16px 16px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .modal-title {
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: 0.2px;
+        color: inherit;
+      }
+
+      .modal-badge {
+        font-size: 12px;
+        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+
+      .modal-body {
+        padding: 0 16px 16px;
+      }
+
+      .modal-desc {
+        margin: 0;
+        color: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+        opacity: 0.82;
+      }
+
+      .modal-persona {
+        margin-top: 12px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .modal-persona .kicker {
+        font-size: 12px;
+        color: inherit;
+        margin-bottom: 6px;
+        opacity: 0.86;
+      }
+
+      .modal-persona .pimg {
+        width: 96px;
+        height: 96px;
+        display: none;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 16px;
+        margin: 10px auto 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .modal-persona .ptitle {
+        margin: 0 0 8px;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: inherit;
+      }
+
+      .modal-persona .pinsight {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: inherit;
+        line-height: 1.55;
+        opacity: 0.9;
+      }
+
+      .modal-persona .pdesc {
+        margin: 0;
+        font-size: 12px;
+        color: inherit;
+        line-height: 1.55;
+        opacity: 0.76;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        padding: 14px 16px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .modal-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        backdrop-filter: blur(10px);
+      }
+
+      .modal-btn:active {
+        transform: scale(0.98);
+      }
+
+      .modal-btn.primary {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: inherit;
+        font-weight: 650;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="phone" id="root">
+        <div class="stage" id="stage">
+          <video
+            id="player"
+            muted
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+          ></video>
+          <div class="shade"></div>
+
+          <div class="topbar">
+            <div class="counter" id="counter">1/10</div>
+            <div class="counter" id="category">治愈陪伴</div>
+          </div>
+
+          <div class="hint" id="hint">点击屏幕可播放/暂停；上下滑切换</div>
+
+          <div class="actions">
+            <div>
+              <div class="btn like" id="likeBtn" role="button" aria-label="点赞">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 21s-7-4.35-9.5-8.28C.9 9.85 2.5 6.5 6 6.5c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3.5 0 5.1 3.35 3.5 6.22C19 16.65 12 21 12 21z"
+                  />
+                </svg>
+              </div>
+              <div class="count" id="likeCount">12.4k</div>
+            </div>
+            <div>
+              <div class="btn" id="commentBtn" role="button" aria-label="评论">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                </svg>
+              </div>
+              <div class="count" id="commentCount">892</div>
+            </div>
+            <div>
+              <div class="btn save" id="saveBtn" role="button" aria-label="收藏">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v18l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+                </svg>
+              </div>
+              <div class="count" id="shareCount">543</div>
+            </div>
+            <div>
+              <div class="btn" id="shareBtn" role="button" aria-label="分享">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                  <path d="M12 16V3" />
+                  <path d="M7 8l5-5 5 5" />
+                </svg>
+              </div>
+              <div class="count" id="shareCount2">321</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="user">
+              <div class="avatar"></div>
+              <div class="handle" id="handle">@情绪观察者</div>
+            </div>
+            <p class="caption" id="caption">找到内心的平静时刻</p>
+            <div class="tags" id="tags"></div>
+          </div>
+
+          <div class="footer">
+            <div class="pill"><b>静态版</b><span>双击即开</span></div>
+            <div class="pill" id="statusPill"><span id="statusText">就绪</span></div>
+          </div>
+        </div>
+
+        <div class="modal" id="personaModal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="modal-card" id="personaModalCard">
+            <div class="modal-head">
+              <div class="modal-title">人格小卡片</div>
+              <div class="modal-badge">10/10</div>
+            </div>
+            <div class="modal-body">
+              <p class="modal-desc">你已刷完本轮 10 条视频。进入我的专属空间，看看你的“当下人格”。</p>
+              <div class="modal-persona">
+                <div class="kicker" id="personaKicker">—</div>
+                <img class="pimg" id="personaImg" alt="" />
+                <h3 class="ptitle" id="personaTitle">—</h3>
+                <p class="pinsight" id="personaInsight">—</p>
+                <p class="pdesc" id="personaDesc">—</p>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="modal-btn primary" id="goSpaceBtn" type="button">进入我的专属空间</button>
+              <button class="modal-btn" id="ignoreBtn" type="button">暂时忽略</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var files = [
+          "治愈陪伴-1.mp4",
+          "治愈陪伴-2.mp4",
+          "深夜情绪-1.mp4",
+          "深夜情绪-2.mp4",
+          "恋爱情感-1.mp4",
+          "恋爱情感-2.mp4",
+          "爽感刺激-1.mp4",
+          "爽感刺激-2.mp4",
+          "理想人生-1.mp4",
+          "理想人生-2.mp4",
+          "社会现实-1.mp4",
+          "社会现实-2.mp4",
+          "自我提升-1.mp4",
+          "自我提升-2.mp4",
+          "情绪鸡血-1.mp4",
+          "情绪鸡血-2.mp4",
+          "搞笑摆烂-1.mp4",
+          "搞笑摆烂-2.mp4",
+          "人格玄学-1.mp4",
+          "人格玄学-2.mp4",
+        ];
+
+        function pickOne(arr) {
+          return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffle(arr) {
+          for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = arr[i];
+            arr[i] = arr[j];
+            arr[j] = t;
+          }
+          return arr;
+        }
+
+        function buildRound(files) {
+          var groups = Object.create(null);
+          for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            var prefix = (f.split("-")[0] || "视频").trim();
+            if (!groups[prefix]) groups[prefix] = [];
+            groups[prefix].push(f);
+          }
+
+          var keys = Object.keys(groups);
+          var picked = [];
+          for (var k = 0; k < keys.length; k++) {
+            picked.push(pickOne(groups[keys[k]]));
+          }
+          return shuffle(picked);
+        }
+
+        function kFormat(n) {
+          if (n >= 10000) return (n / 10000).toFixed(1) + "w";
+          if (n >= 1000) return (n / 1000).toFixed(1) + "k";
+          return String(n);
+        }
+
+        function makeItem(file, i) {
+          var parts = file.replace(".mp4", "").split("-");
+          var category = parts[0] || "视频";
+          var seq = parts[1] || String(i + 1);
+          return {
+            id: file,
+            category: category,
+            title: category + " " + seq,
+            caption: "“" + category + "” 类型视频 - 第 " + seq + " 条",
+            tags: ["#" + category, "#抖音刷视频", "#本地MP4"],
+            likes: 8000 + (i % 7) * 2300,
+            comments: 200 + (i % 9) * 97,
+            shares: 120 + (i % 8) * 61,
+            src: "./src/vedio/" + file,
+          };
+        }
+
+        var roundFiles = buildRound(files);
+        var data = roundFiles.map(makeItem);
+
+        var stage = document.getElementById("stage");
+        var player = document.getElementById("player");
+        var actions = document.querySelector(".actions");
+        var counter = document.getElementById("counter");
+        var categoryEl = document.getElementById("category");
+        var captionEl = document.getElementById("caption");
+        var tagsEl = document.getElementById("tags");
+        var likeBtn = document.getElementById("likeBtn");
+        var saveBtn = document.getElementById("saveBtn");
+        var likeCount = document.getElementById("likeCount");
+        var commentCount = document.getElementById("commentCount");
+        var shareCount = document.getElementById("shareCount");
+        var shareCount2 = document.getElementById("shareCount2");
+        var hint = document.getElementById("hint");
+        var statusText = document.getElementById("statusText");
+        var personaModal = document.getElementById("personaModal");
+        var personaModalCard = document.getElementById("personaModalCard");
+        var goSpaceBtn = document.getElementById("goSpaceBtn");
+        var ignoreBtn = document.getElementById("ignoreBtn");
+        var personaKicker = document.getElementById("personaKicker");
+        var personaTitle = document.getElementById("personaTitle");
+        var personaInsight = document.getElementById("personaInsight");
+        var personaDesc = document.getElementById("personaDesc");
+        var personaImg = document.getElementById("personaImg");
+
+        var idx = 0;
+        var liked = Object.create(null);
+        var saved = Object.create(null);
+        var touchStartY = 0;
+        var touchEndY = 0;
+        var modalOpen = false;
+
+        var PERIODS = {
+          morning: {
+            label: "人类重启区",
+            range: "06:00-11:00",
+            gradient: "linear-gradient(135deg, #FFB88C, #FFE8D9)",
+            text: "#2A2A2A",
+            card: {
+              title: "五分钟改变人生者",
+              insight: "一时上头想立刻蜕变",
+              description: "短时逆袭上头模式",
+            },
+          },
+          afternoon: {
+            label: "精神下班区",
+            range: "12:00-18:00",
+            gradient: "linear-gradient(135deg, #A0D8EF, #E5F3F9)",
+            text: "#2A2A2A",
+            card: {
+              title: "工位灵魂出窍者",
+              insight: "身体在岗，灵魂早已出走",
+              description: "精神开始逃离现实",
+            },
+          },
+          evening: {
+            label: "终于轮到我了区",
+            range: "19:00-24:00",
+            gradient: "linear-gradient(135deg, #8B7EB8, #4A3F5C)",
+            text: "#E8E6F0",
+            card: {
+              title: "白天装正常的人",
+              insight: "到了晚上才做真实的自己",
+              description: "卸下伪装回归本我",
+            },
+          },
+          midnight: {
+            label: "真实面暴露区",
+            range: "00:00-04:00",
+            gradient: "linear-gradient(135deg, #3A4D6B, #1A2332)",
+            text: "#B8C5D6",
+            card: {
+              title: "emo潜水艇",
+              insight: "深夜陷入安静细腻情绪",
+              description: "沉入情绪独处深水区",
+            },
+          },
+        };
+
+        function getPeriodByHour(hour) {
+          if (hour >= 6 && hour < 12) return "morning";
+          if (hour >= 12 && hour < 19) return "afternoon";
+          if (hour >= 19 && hour < 24) return "evening";
+          return "midnight";
+        }
+
+        function applyPersonaCard() {
+          var periodKey = getPeriodByHour(new Date().getHours());
+          var info = PERIODS[periodKey] || PERIODS.morning;
+
+          if (personaKicker) personaKicker.textContent = info.label + " · " + info.range;
+          if (personaTitle) personaTitle.textContent = info.card.title;
+          if (personaInsight) personaInsight.textContent = info.card.insight;
+          if (personaDesc) personaDesc.textContent = info.card.description;
+
+          if (personaImg) {
+            personaImg.style.display = "none";
+            personaImg.onload = function () {
+              personaImg.style.display = "block";
+            };
+            personaImg.onerror = function () {
+              personaImg.style.display = "none";
+            };
+            personaImg.alt = info.card.title;
+            personaImg.src = encodeURI("./src/imports/" + info.card.title + ".png");
+          }
+
+          if (personaModalCard) {
+            personaModalCard.style.background = info.gradient;
+            personaModalCard.style.color = info.text;
+          }
+        }
+
+        function setStatus(t) {
+          statusText.textContent = t;
+        }
+
+        function showHint() {
+          hint.classList.add("on");
+          window.clearTimeout(showHint._t);
+          showHint._t = window.setTimeout(function () {
+            hint.classList.remove("on");
+          }, 1400);
+        }
+
+        function setTags(tags) {
+          while (tagsEl.firstChild) tagsEl.removeChild(tagsEl.firstChild);
+          for (var i = 0; i < tags.length; i++) {
+            var span = document.createElement("span");
+            span.className = "tag";
+            span.textContent = tags[i];
+            tagsEl.appendChild(span);
+          }
+        }
+
+        function pauseReset() {
+          try {
+            player.pause();
+            player.currentTime = 0;
+          } catch (e) {}
+        }
+
+        function playSafe() {
+          var p = player.play();
+          if (p && p.catch) {
+            p.catch(function () {
+              showHint();
+              setStatus("需要点击后播放");
+            });
+          }
+        }
+
+        function openModal() {
+          if (modalOpen) return;
+          applyPersonaCard();
+          modalOpen = true;
+          personaModal.classList.add("on");
+          personaModal.setAttribute("aria-hidden", "false");
+          try {
+            player.pause();
+          } catch (e) {}
+        }
+
+        function closeModal() {
+          if (!modalOpen) return;
+          modalOpen = false;
+          personaModal.classList.remove("on");
+          personaModal.setAttribute("aria-hidden", "true");
+          playSafe();
+        }
+
+        function applyItem(item) {
+          counter.textContent = idx + 1 + "/" + data.length;
+          categoryEl.textContent = item.category;
+          captionEl.textContent = item.caption;
+          setTags(item.tags);
+
+          likeBtn.classList.toggle("on", !!liked[item.id]);
+          saveBtn.classList.toggle("on", !!saved[item.id]);
+
+          likeCount.textContent = kFormat(item.likes + (liked[item.id] ? 1 : 0));
+          commentCount.textContent = kFormat(item.comments);
+          shareCount.textContent = kFormat(item.shares);
+          shareCount2.textContent = kFormat(item.shares + 88);
+
+          setStatus("加载中…");
+          pauseReset();
+          player.src = encodeURI(item.src);
+          player.load();
+          playSafe();
+        }
+
+        function go(next) {
+          if (next < 0 || next >= data.length) return;
+          idx = next;
+          stage.style.transition = "transform 180ms ease";
+          stage.style.transform = "translateY(0)";
+          applyItem(data[idx]);
+        }
+
+        function swipe(dir) {
+          if (modalOpen) return;
+          if (dir === "up") {
+            if (idx >= data.length - 1) {
+              openModal();
+              return;
+            }
+            go(idx + 1);
+          } else {
+            if (idx <= 0) return;
+            go(idx - 1);
+          }
+        }
+
+        player.addEventListener("loadedmetadata", function () {
+          setStatus("就绪");
+        });
+
+        player.addEventListener("error", function () {
+          setStatus("视频加载失败");
+          showHint();
+        });
+
+        stage.addEventListener("click", function (e) {
+          if (modalOpen) return;
+          if (actions && actions.contains(e.target)) return;
+          if (player.paused) {
+            playSafe();
+          } else {
+            player.pause();
+          }
+        });
+
+        likeBtn.addEventListener("click", function () {
+          var id = data[idx].id;
+          liked[id] = !liked[id];
+          applyItem(data[idx]);
+        });
+
+        saveBtn.addEventListener("click", function () {
+          var id = data[idx].id;
+          saved[id] = !saved[id];
+          applyItem(data[idx]);
+        });
+
+        personaModal.addEventListener("click", function (e) {
+          if (e.target === personaModal) closeModal();
+        });
+
+        personaModalCard.addEventListener("click", function (e) {
+          e.stopPropagation();
+        });
+
+        goSpaceBtn.addEventListener("click", function () {
+          window.location.href = "./current.html";
+        });
+
+        ignoreBtn.addEventListener("click", function () {
+          closeModal();
+        });
+
+        stage.addEventListener("touchstart", function (e) {
+          touchStartY = e.touches[0].clientY;
+          touchEndY = 0;
+        });
+
+        stage.addEventListener("touchmove", function (e) {
+          touchEndY = e.touches[0].clientY;
+        });
+
+        stage.addEventListener("touchend", function () {
+          if (!touchStartY || !touchEndY) return;
+          var d = touchStartY - touchEndY;
+          if (d > 50) swipe("up");
+          if (d < -50) swipe("down");
+        });
+
+        stage.addEventListener("wheel", function (e) {
+          if (e.deltaY > 0) swipe("up");
+          if (e.deltaY < 0) swipe("down");
+        });
+
+        window.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowDown") swipe("up");
+          if (e.key === "ArrowUp") swipe("down");
+        });
+
+        showHint();
+        applyItem(data[idx]);
+      })();
+    </script>
+  </body>
+</html>
+  

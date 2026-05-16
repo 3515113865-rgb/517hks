@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>时间轴</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      }
+
+      body {
+        background: var(--period-bg);
+        color: var(--period-text);
+      }
+
+      .period-morning {
+        --period-primary: #ff9d6e;
+        --period-secondary: #ffe8d9;
+        --period-bg: #fafafa;
+        --period-text: #2a2a2a;
+        --glass-bg: rgba(255, 255, 255, 0.72);
+        --glass-border: rgba(17, 17, 17, 0.08);
+        --shadow: 0 16px 46px rgba(0, 0, 0, 0.1);
+        --line: rgba(17, 17, 17, 0.12);
+      }
+
+      .period-afternoon {
+        --period-primary: #87ceeb;
+        --period-secondary: #d4e8f0;
+        --period-bg: #f5f9fc;
+        --period-text: #2a2a2a;
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(17, 17, 17, 0.08);
+        --shadow: 0 16px 46px rgba(0, 0, 0, 0.1);
+        --line: rgba(17, 17, 17, 0.12);
+      }
+
+      .period-evening {
+        --period-primary: #9b8fc7;
+        --period-secondary: #c5bfdb;
+        --period-bg: #2a2634;
+        --period-text: #e8e6f0;
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 18px 56px rgba(0, 0, 0, 0.42);
+        --line: rgba(255, 255, 255, 0.16);
+      }
+
+      .period-midnight {
+        --period-primary: #4a5f7f;
+        --period-secondary: #5d6f8a;
+        --period-bg: #0f1419;
+        --period-text: #b8c5d6;
+        --glass-bg: rgba(255, 255, 255, 0.09);
+        --glass-border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 18px 66px rgba(0, 0, 0, 0.55);
+        --line: rgba(255, 255, 255, 0.16);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .app {
+        min-height: 100%;
+        max-width: 375px;
+        margin: 0 auto;
+        padding: 18px 16px calc(94px + env(safe-area-inset-bottom));
+        position: relative;
+      }
+
+      .bg-atmo {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .bg-atmo::before,
+      .bg-atmo::after {
+        content: "";
+        position: absolute;
+        width: 520px;
+        height: 520px;
+        border-radius: 50%;
+        filter: blur(44px);
+        opacity: 0.52;
+        background: radial-gradient(circle at 30% 30%, var(--period-primary), transparent 55%),
+          radial-gradient(circle at 70% 70%, var(--period-secondary), transparent 55%);
+      }
+
+      .bg-atmo::before {
+        top: -260px;
+        left: -280px;
+      }
+
+      .bg-atmo::after {
+        bottom: -320px;
+        right: -320px;
+        opacity: 0.36;
+      }
+
+      .header {
+        position: relative;
+        z-index: 1;
+        margin-top: env(safe-area-inset-top);
+      }
+
+      .header-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .chip span {
+        font-size: 12px;
+        letter-spacing: 0.2px;
+      }
+
+      .back {
+        height: 40px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 14px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        user-select: none;
+        font-size: 13px;
+        font-weight: 620;
+      }
+
+      .back:active {
+        transform: scale(0.98);
+      }
+
+      .back svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+
+      .title {
+        position: relative;
+        z-index: 1;
+        margin: 18px 0 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+      }
+
+      .subtitle {
+        position: relative;
+        z-index: 1;
+        margin: 8px 0 0;
+        font-size: 13px;
+        opacity: 0.74;
+        line-height: 1.65;
+      }
+
+      .timeline {
+        position: relative;
+        z-index: 1;
+        margin-top: 18px;
+        padding-top: 6px;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        left: 13px;
+        top: 26px;
+        bottom: 0;
+        width: 2px;
+        background: var(--line);
+      }
+
+      .entry {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px 0;
+      }
+
+      .dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 2px solid var(--period-primary);
+        background: var(--period-bg);
+        flex: none;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+      }
+
+      .dot.today {
+        background: var(--period-primary);
+        box-shadow: 0 14px 32px color-mix(in oklab, var(--period-primary) 55%, transparent);
+      }
+
+      .entry-main {
+        flex: 1;
+        padding-top: 1px;
+        min-width: 0;
+      }
+
+      .entry-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .entry-date {
+        font-size: 13px;
+        letter-spacing: 0.2px;
+        font-weight: 620;
+      }
+
+      .entry-date.muted {
+        font-weight: 520;
+      }
+
+      .entry-weekday {
+        font-size: 12px;
+        opacity: 0.62;
+      }
+
+      .card {
+        border-radius: 22px;
+        border: 1px solid var(--glass-border);
+        background: color-mix(in oklab, var(--glass-bg) 84%, transparent);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+        padding: 16px 16px 14px;
+      }
+
+      .card .card-img {
+        width: 72px;
+        height: 72px;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 16px;
+        margin: 0 auto 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+        letter-spacing: 0.2px;
+        color: var(--period-primary);
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 13px;
+        opacity: 0.82;
+        line-height: 1.65;
+        word-break: break-word;
+      }
+
+      .bottom {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+        display: grid;
+        place-items: center;
+        pointer-events: auto;
+        z-index: 30;
+      }
+
+      .bottom-inner {
+        width: min(375px, calc(100% - 20px));
+        pointer-events: auto;
+        border-radius: 18px;
+        border: 1px solid var(--glass-border);
+        background: color-mix(in oklab, var(--glass-bg) 88%, transparent);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px;
+      }
+
+      .nav-back {
+        height: 40px;
+        border-radius: 14px;
+        border: 1px solid var(--glass-border);
+        background: color-mix(in oklab, var(--glass-bg) 85%, transparent);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 680;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .nav-back:active {
+        transform: scale(0.98);
+      }
+
+      .nav-back svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .tabs {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .tab {
+        height: 40px;
+        padding: 0 10px;
+        border-radius: 14px;
+        border: 1px solid var(--glass-border);
+        background: color-mix(in oklab, var(--glass-bg) 85%, transparent);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        opacity: 0.9;
+        user-select: none;
+        min-width: 0;
+        touch-action: manipulation;
+        cursor: pointer;
+      }
+
+      .tab svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+
+      .tab span {
+        display: inline-block;
+        max-width: 72px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tab.active {
+        background: var(--period-primary);
+        border-color: color-mix(in oklab, var(--period-primary) 70%, var(--glass-border));
+        color: var(--period-bg);
+        opacity: 1;
+        font-weight: 700;
+      }
+
+      .fade {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: appear 720ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+      }
+
+      @keyframes appear {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app" id="app">
+      <div class="bg-atmo" aria-hidden="true"></div>
+
+      <header class="header">
+        <div class="header-top fade" style="animation-delay: 20ms">
+          <div class="chip" aria-label="时间段信息">
+            <span id="periodLabel">此刻</span>
+            <span style="opacity: 0.62">·</span>
+            <span id="periodTime">--:--</span>
+          </div>
+          <a class="back" href="./index.html" aria-label="返回到首页">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M15.25 5.75 8.75 12l6.5 6.25"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            返回
+          </a>
+        </div>
+
+        <h1 class="title fade" style="animation-delay: 90ms">时间轴</h1>
+        <p class="subtitle fade" style="animation-delay: 140ms">你过去 7 天的人格切片</p>
+      </header>
+
+      <section class="timeline" aria-label="时间线列表">
+        <div id="timelineList"></div>
+      </section>
+    </main>
+
+    <nav class="bottom" aria-label="底部标签栏">
+      <div class="bottom-inner">
+        <a class="nav-back" href="./index.html" aria-label="返回到首页">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M15.25 5.75 8.75 12l6.5 6.25"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          返回
+        </a>
+
+        <div class="tabs" role="tablist" aria-label="页面切换">
+          <a class="tab" role="tab" aria-label="此刻的你" href="./current.html" data-page="current">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 2l1.6 4.7 4.9.1-3.9 2.9 1.5 4.8-4.1-2.7-4.1 2.7 1.5-4.8-3.9-2.9 4.9-.1L12 2Z"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linejoin="round"
+                opacity="0.92"
+              />
+            </svg>
+            <span>此刻的你</span>
+          </a>
+          <a class="tab" role="tab" aria-label="当日测评" href="./daily.html" data-page="daily">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M8 3v3M16 3v3"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+              />
+              <path
+                d="M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                stroke="currentColor"
+                stroke-width="1.7"
+                opacity="0.9"
+              />
+              <path
+                d="M7 11h10M7 15h7"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                opacity="0.65"
+              />
+            </svg>
+            <span>当日测评</span>
+          </a>
+          <a class="tab active" role="tab" aria-label="时间轴" href="./timeline.html" data-page="timeline">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 2a9.5 9.5 0 1 0 9.5 9.5"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                opacity="0.9"
+              />
+              <path
+                d="M12 6.5v6l4 2.3"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M18.6 5.4 22 5v3.4"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                opacity="0.7"
+              />
+            </svg>
+            <span>时间轴</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      (function () {
+        var WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        var PERIODS = {
+          morning: { label: "人类重启区", range: "06:00-11:00", className: "period-morning" },
+          afternoon: { label: "精神下班区", range: "12:00-18:00", className: "period-afternoon" },
+          evening: { label: "终于轮到我了区", range: "19:00-24:00", className: "period-evening" },
+          midnight: { label: "真实面暴露区", range: "00:00-04:00", className: "period-midnight" },
+        };
+
+        var STORAGE_PERSONA = "dy_persona_v1";
+
+        function loadJSON(key, fallback) {
+          try {
+            var raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (e) {
+            return fallback;
+          }
+        }
+
+        function pad2(n) {
+          return String(n).padStart(2, "0");
+        }
+
+        function formatMMDD(d) {
+          return pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+        }
+
+        function getPeriodByHour(hour) {
+          if (hour >= 6 && hour < 12) return "morning";
+          if (hour >= 12 && hour < 19) return "afternoon";
+          if (hour >= 19 && hour < 24) return "evening";
+          return "midnight";
+        }
+
+        function el(id) {
+          return document.getElementById(id);
+        }
+
+        function setText(id, text) {
+          var node = el(id);
+          if (node) node.textContent = text;
+        }
+
+        function escapeHTML(s) {
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function sameDay(a, b) {
+          return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+
+        function buildEntries() {
+          var now = new Date();
+          var store = loadJSON(STORAGE_PERSONA, null);
+          var history = store && store.history;
+          if (Array.isArray(history) && history.length) {
+            var out = [];
+            for (var i = 0; i < history.length && out.length < 24; i++) {
+              var it = history[i];
+              if (!it || !it.persona || !it.ts) continue;
+              var d = new Date(it.ts);
+              out.push({
+                date: d,
+                label: sameDay(d, now) ? "今天" : formatMMDD(d),
+                card: { title: it.persona.title, image: it.personaImage },
+                behavior: it.summary || "",
+              });
+            }
+            if (out.length) return out;
+          }
+
+          var cards = {
+            n1: { title: "emo潜水艇" },
+            e5: { title: "情绪散热中" },
+            a3: { title: "精神下班者" },
+            m1: { title: "五分钟改变人生者" },
+          };
+
+          return [
+            {
+              date: now,
+              label: "今天",
+              card: cards.n1,
+              behavior: "凌晨刷了 47 条视频，停留在深夜独白话题最久。",
+            },
+            {
+              date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
+              label: formatMMDD(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)),
+              card: cards.e5,
+              behavior: "夜晚被一段幸福短片打动，反复观看两次。",
+            },
+            {
+              date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2),
+              label: formatMMDD(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2)),
+              card: cards.a3,
+              behavior: "午后高频切换轻知识与旅行内容。",
+            },
+            {
+              date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3),
+              label: formatMMDD(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3)),
+              card: cards.m1,
+              behavior: "清晨集中观看了 6 条早餐 vlog。",
+            },
+            {
+              date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 4),
+              label: formatMMDD(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 4)),
+              card: cards.e5,
+              behavior: "睡前长时间停留在城市夜景。",
+            },
+          ];
+        }
+
+        function renderTimeline() {
+          var list = el("timelineList");
+          if (!list) return;
+
+          var entries = buildEntries();
+
+          list.innerHTML = entries
+            .map(function (entry, idx) {
+              var isToday = idx === 0;
+              var weekday = WEEKDAYS[entry.date.getDay()];
+              var delay = 220 + idx * 90;
+              var imgSrc = entry.card.image ? entry.card.image : "./src/imports/" + entry.card.title + ".png";
+
+              return (
+                '<article class="entry fade" style="animation-delay:' +
+                delay +
+                'ms">' +
+                '<div class="dot' +
+                (isToday ? " today" : "") +
+                '" aria-hidden="true"></div>' +
+                '<div class="entry-main">' +
+                '<div class="entry-meta">' +
+                '<div class="entry-date' +
+                (isToday ? "" : " muted") +
+                '">' +
+                escapeHTML(entry.label) +
+                "</div>" +
+                '<div class="entry-weekday">' +
+                escapeHTML(weekday) +
+                "</div>" +
+                "</div>" +
+                '<div class="card" role="group" aria-label="' +
+                escapeHTML(entry.card.title) +
+                '">' +
+                '<img class="card-img" src="' +
+                encodeURI(imgSrc) +
+                '" alt="' +
+                escapeHTML(entry.card.title) +
+                '" onerror="this.style.display=\\\"none\\\";" />' +
+                "<h3>" +
+                escapeHTML(entry.card.title) +
+                "</h3>" +
+                "<p>" +
+                escapeHTML(entry.behavior) +
+                "</p>" +
+                "</div>" +
+                "</div>" +
+                "</article>"
+              );
+            })
+            .join("");
+        }
+
+        function applyTheme() {
+          var now = new Date();
+          var periodKey = getPeriodByHour(now.getHours());
+          var info = PERIODS[periodKey] || PERIODS.morning;
+
+          document.body.className = info.className;
+          setText("periodLabel", info.label);
+          setText("periodTime", info.range);
+        }
+
+        function highlightTabs() {
+          var file = (location.pathname.split("/").pop() || "").toLowerCase();
+          var map = { "current.html": "current", "daily.html": "daily", "timeline.html": "timeline" };
+          var active = map[file] || "timeline";
+
+          var tabs = document.querySelectorAll(".tab[data-page]");
+          for (var i = 0; i < tabs.length; i++) {
+            var t = tabs[i];
+            t.classList.toggle("active", t.getAttribute("data-page") === active);
+          }
+        }
+
+        applyTheme();
+        highlightTabs();
+        renderTimeline();
+      })();
+    </script>
+  </body>
+</html>

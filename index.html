@@ -1,0 +1,1420 @@
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>抖音短视频应用设计（静态版）</title>
+    <style>
+      :root {
+        --bg: #000;
+        --fg: #fff;
+        --muted: rgba(255, 255, 255, 0.72);
+        --muted2: rgba(255, 255, 255, 0.55);
+        --glass: rgba(255, 255, 255, 0.18);
+        --glass2: rgba(255, 255, 255, 0.12);
+        --danger: #ff2d55;
+        --warn: #ffcc00;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+
+      .wrap {
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+
+      .phone {
+        width: 100%;
+        max-width: 420px;
+        height: min(860px, 100vh);
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .stage {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #000;
+      }
+
+      video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+      }
+
+      .shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.62) 100%);
+        pointer-events: none;
+      }
+
+      .topbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        padding: 14px 14px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 3;
+      }
+
+      .counter {
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+      }
+
+      .top-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        max-width: 74%;
+      }
+
+      .persona-entry {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(0, 0, 0, 0.48);
+        border-color: rgba(255, 255, 255, 0.18);
+        text-decoration: none;
+      }
+
+      .persona-entry svg {
+        width: 18px;
+        height: 18px;
+        opacity: 0.92;
+      }
+
+      .persona-entry.has {
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 8px 16px rgba(0, 0, 0, 0.32);
+      }
+
+      .hint {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%, -50%);
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--muted);
+        font-size: 12px;
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+
+      .hint.on {
+        opacity: 1;
+      }
+
+      .actions {
+        position: absolute;
+        right: 12px;
+        bottom: 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        z-index: 3;
+      }
+
+      .btn {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .btn:active {
+        transform: scale(0.95);
+      }
+
+      .btn svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .btn.like.on {
+        background: rgba(255, 45, 85, 0.88);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .btn.like.on svg {
+        fill: #fff;
+      }
+
+      .btn.save.on {
+        background: rgba(255, 204, 0, 0.85);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .btn.save.on svg {
+        fill: #fff;
+        stroke: #fff;
+      }
+
+      .count {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #fff;
+        text-align: center;
+      }
+
+      .meta {
+        position: absolute;
+        left: 12px;
+        right: 90px;
+        bottom: 18px;
+        z-index: 3;
+      }
+
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        background: radial-gradient(circle at 25% 25%, #a855f7 0%, #ec4899 45%, #fb7185 100%);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+      }
+
+      .handle {
+        font-size: 14px;
+        color: #fff;
+      }
+
+      .caption {
+        font-size: 14px;
+        line-height: 1.4;
+        color: #fff;
+        margin: 0 0 10px;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .tag {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 4px 8px;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+      }
+
+      .footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+        z-index: 3;
+      }
+
+      .pill {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+      }
+
+      .pill b {
+        color: #fff;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .modal {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+      }
+
+      .modal.on {
+        display: flex;
+      }
+
+      .modal-card {
+        width: min(360px, 100%);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(20, 20, 20, 0.72);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+      }
+
+      .modal-head {
+        padding: 16px 16px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .modal-title {
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: 0.2px;
+        color: inherit;
+      }
+
+      .modal-badge {
+        font-size: 12px;
+        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+
+      .modal-body {
+        padding: 0 16px 16px;
+      }
+
+      .modal-desc {
+        margin: 0;
+        color: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+        opacity: 0.82;
+      }
+
+      .modal-persona {
+        margin-top: 12px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .modal-persona .kicker {
+        font-size: 12px;
+        color: inherit;
+        margin-bottom: 6px;
+        opacity: 0.86;
+      }
+
+      .modal-persona .pimg {
+        width: 96px;
+        height: 96px;
+        display: none;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 16px;
+        margin: 10px auto 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .modal-persona .ptitle {
+        margin: 0 0 8px;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: inherit;
+      }
+
+      .modal-persona .pinsight {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: inherit;
+        line-height: 1.55;
+        opacity: 0.9;
+      }
+
+      .modal-persona .pdesc {
+        margin: 0;
+        font-size: 12px;
+        color: inherit;
+        line-height: 1.55;
+        opacity: 0.76;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        padding: 14px 16px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .modal-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        backdrop-filter: blur(10px);
+      }
+
+      .modal-btn:active {
+        transform: scale(0.98);
+      }
+
+      .modal-btn.primary {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: inherit;
+        font-weight: 650;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="phone" id="root">
+        <div class="stage" id="stage">
+          <video
+            id="player"
+            muted
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+          ></video>
+          <div class="shade"></div>
+
+          <div class="topbar">
+            <div class="counter" id="counter">1/10</div>
+            <div class="top-right">
+              <div class="counter" id="category">治愈陪伴</div>
+              <a class="counter persona-entry" id="personaEntry" href="./current.html" aria-label="进入人格页">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.3-8 5.2V22h16v-2.8C20 16.3 16.4 14 12 14z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="hint" id="hint">点击屏幕可播放/暂停；上下滑切换</div>
+
+          <div class="actions">
+            <div>
+              <div class="btn like" id="likeBtn" role="button" aria-label="点赞">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 21s-7-4.35-9.5-8.28C.9 9.85 2.5 6.5 6 6.5c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3.5 0 5.1 3.35 3.5 6.22C19 16.65 12 21 12 21z"
+                  />
+                </svg>
+              </div>
+              <div class="count" id="likeCount">12.4k</div>
+            </div>
+            <div>
+              <div class="btn" id="commentBtn" role="button" aria-label="评论">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                </svg>
+              </div>
+              <div class="count" id="commentCount">892</div>
+            </div>
+            <div>
+              <div class="btn save" id="saveBtn" role="button" aria-label="收藏">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v18l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+                </svg>
+              </div>
+              <div class="count" id="shareCount">543</div>
+            </div>
+            <div>
+              <div class="btn" id="shareBtn" role="button" aria-label="分享">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                  <path d="M12 16V3" />
+                  <path d="M7 8l5-5 5 5" />
+                </svg>
+              </div>
+              <div class="count" id="shareCount2">321</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="user">
+              <div class="avatar"></div>
+              <div class="handle" id="handle">@情绪观察者</div>
+            </div>
+            <p class="caption" id="caption">找到内心的平静时刻</p>
+            <div class="tags" id="tags"></div>
+          </div>
+
+          <div class="footer">
+            <div class="pill"><b>静态版</b><span>双击即开</span></div>
+            <div class="pill" id="statusPill"><span id="statusText">就绪</span></div>
+          </div>
+        </div>
+
+        <div class="modal" id="personaModal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="modal-card" id="personaModalCard">
+            <div class="modal-head">
+              <div class="modal-title">人格小卡片</div>
+              <div class="modal-badge">10/10</div>
+            </div>
+            <div class="modal-body">
+              <p class="modal-desc">你已刷完本轮 10 条视频。进入我的专属空间，看看你的“当下人格”。</p>
+              <div class="modal-persona">
+                <div class="kicker" id="personaKicker">—</div>
+                <img class="pimg" id="personaImg" alt="" />
+                <h3 class="ptitle" id="personaTitle">—</h3>
+                <p class="pinsight" id="personaInsight">—</p>
+                <p class="pdesc" id="personaDesc">—</p>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="modal-btn primary" id="goSpaceBtn" type="button">进入我的专属空间</button>
+              <button class="modal-btn" id="ignoreBtn" type="button">暂时忽略</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var files = [
+          "治愈陪伴-1.mp4",
+          "治愈陪伴-2.mp4",
+          "深夜情绪-1.mp4",
+          "深夜情绪-2.mp4",
+          "恋爱情感-1.mp4",
+          "恋爱情感-2.mp4",
+          "爽感刺激-1.mp4",
+          "爽感刺激-2.mp4",
+          "理想人生-1.mp4",
+          "理想人生-2.mp4",
+          "社会现实-1.mp4",
+          "社会现实-2.mp4",
+          "自我提升-1.mp4",
+          "自我提升-2.mp4",
+          "情绪鸡血-1.mp4",
+          "情绪鸡血-2.mp4",
+          "搞笑摆烂-1.mp4",
+          "搞笑摆烂-2.mp4",
+          "人格玄学-1.mp4",
+          "人格玄学-2.mp4",
+        ];
+
+        function loadJSONEarly(key, fallback) {
+          try {
+            var raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (e) {
+            return fallback;
+          }
+        }
+
+        var STORAGE_INTERACTIONS = "dy_interactions_v1";
+        var STORAGE_PERSONA = "dy_persona_v1";
+        var persistedEarly = loadJSONEarly(STORAGE_INTERACTIONS, { liked: {}, saved: {} });
+        var likedEarly = (persistedEarly && persistedEarly.liked) || Object.create(null);
+        var savedEarly = (persistedEarly && persistedEarly.saved) || Object.create(null);
+
+        function pickOne(arr) {
+          return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffle(arr) {
+          for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = arr[i];
+            arr[i] = arr[j];
+            arr[j] = t;
+          }
+          return arr;
+        }
+
+        function buildRound(files) {
+          var groups = Object.create(null);
+          for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            var prefix = (f.split("-")[0] || "视频").trim();
+            if (!groups[prefix]) groups[prefix] = [];
+            groups[prefix].push(f);
+          }
+
+          var keys = Object.keys(groups);
+          var picked = [];
+          for (var k = 0; k < keys.length; k++) {
+            picked.push(pickOne(groups[keys[k]]));
+          }
+          return shuffle(picked);
+        }
+
+        function buildRoundFiltered(files) {
+          var available = [];
+          for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (likedEarly[f] || savedEarly[f]) continue;
+            available.push(f);
+          }
+
+          if (!available.length) return buildRound(files);
+
+          var groups = Object.create(null);
+          for (var i = 0; i < available.length; i++) {
+            var f = available[i];
+            var prefix = (f.split("-")[0] || "视频").trim();
+            if (!groups[prefix]) groups[prefix] = [];
+            groups[prefix].push(f);
+          }
+
+          var keys = Object.keys(groups);
+          var picked = [];
+          for (var k = 0; k < keys.length; k++) {
+            picked.push(pickOne(groups[keys[k]]));
+          }
+
+          var used = Object.create(null);
+          for (var i = 0; i < picked.length; i++) used[picked[i]] = true;
+          var pool = [];
+          for (var i = 0; i < available.length; i++) if (!used[available[i]]) pool.push(available[i]);
+
+          while (picked.length < 10 && pool.length) {
+            var pick = pickOne(pool);
+            picked.push(pick);
+            pool = pool.filter(function (x) {
+              return x !== pick;
+            });
+          }
+
+          return shuffle(picked);
+        }
+
+        function kFormat(n) {
+          if (n >= 10000) return (n / 10000).toFixed(1) + "w";
+          if (n >= 1000) return (n / 1000).toFixed(1) + "k";
+          return String(n);
+        }
+
+        function makeItem(file, i) {
+          var parts = file.replace(".mp4", "").split("-");
+          var category = parts[0] || "视频";
+          var seq = parts[1] || String(i + 1);
+          return {
+            id: file,
+            category: category,
+            title: category + " " + seq,
+            caption: "“" + category + "” 类型视频 - 第 " + seq + " 条",
+            tags: ["#" + category, "#抖音刷视频", "#本地MP4"],
+            likes: 8000 + (i % 7) * 2300,
+            comments: 200 + (i % 9) * 97,
+            shares: 120 + (i % 8) * 61,
+            src: "./src/vedio/" + file,
+          };
+        }
+
+        var roundFiles = buildRoundFiltered(files);
+        var data = roundFiles.map(makeItem);
+
+        var stage = document.getElementById("stage");
+        var player = document.getElementById("player");
+        var actions = document.querySelector(".actions");
+        var counter = document.getElementById("counter");
+        var categoryEl = document.getElementById("category");
+        var captionEl = document.getElementById("caption");
+        var tagsEl = document.getElementById("tags");
+        var likeBtn = document.getElementById("likeBtn");
+        var saveBtn = document.getElementById("saveBtn");
+        var likeCount = document.getElementById("likeCount");
+        var commentCount = document.getElementById("commentCount");
+        var shareCount = document.getElementById("shareCount");
+        var shareCount2 = document.getElementById("shareCount2");
+        var hint = document.getElementById("hint");
+        var statusText = document.getElementById("statusText");
+        var personaModal = document.getElementById("personaModal");
+        var personaModalCard = document.getElementById("personaModalCard");
+        var goSpaceBtn = document.getElementById("goSpaceBtn");
+        var ignoreBtn = document.getElementById("ignoreBtn");
+        var personaEntry = document.getElementById("personaEntry");
+        var personaKicker = document.getElementById("personaKicker");
+        var personaTitle = document.getElementById("personaTitle");
+        var personaInsight = document.getElementById("personaInsight");
+        var personaDesc = document.getElementById("personaDesc");
+        var personaImg = document.getElementById("personaImg");
+
+        function loadJSON(key, fallback) {
+          try {
+            var raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (e) {
+            return fallback;
+          }
+        }
+
+        function saveJSON(key, value) {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch (e) {}
+        }
+
+        var persisted = persistedEarly || loadJSON(STORAGE_INTERACTIONS, { liked: {}, saved: {} });
+
+        var idx = 0;
+        var liked = likedEarly || (persisted && persisted.liked) || Object.create(null);
+        var saved = savedEarly || (persisted && persisted.saved) || Object.create(null);
+        var touchStartY = 0;
+        var touchEndY = 0;
+        var modalOpen = false;
+
+        var PERSONA_IMAGES = {
+          m1: "今天一定重新做人型.png",
+          m2: "起床失败学家.png",
+          m3: "通勤失神者.png",
+          m4: "今日份元气演员.png",
+          m5: "缓慢启动者.png",
+          m6: "假装积极型.png",
+          m7: "五分钟改变人生者.png",
+          m8: "闹钟逃亡者.png",
+          n1: "工位灵魂出窍者.png",
+          n2: "电子榨菜狂炫者.png",
+          n3: "精神下班者.png",
+          n4: "午后麻木者.png",
+          n5: "摸鱼行为艺术家.png",
+          n6: "人类电量1%者.png",
+          n7: "已读人生但不想回复者.png",
+          n8: "多巴胺急救模式.png",
+          e1: "白天装正常的人.png",
+          e2: "兴趣续命玩家.png",
+          e3: "今天辛苦了老板者.png",
+          e4: "夜间人格上线.png",
+          e5: "情绪散热中.png",
+          e6: "互联网夜游神.png",
+          e7: "白天那个不是我.png",
+          e8: "奖励自己综合征.png",
+          l1: "emo潜水艇.png",
+          l2: "赛博陪睡需求者.png",
+          l3: "凌晨突然想通人生.png",
+          l4: "舍不得睡星人.png",
+          l5: "回忆无限重播.png",
+          l6: "世界静音观察员.png",
+          l7: "凌晨两点互联网遗民.png",
+          l8: "全世界请小声一点者.png",
+        };
+
+        var PERIOD_INFO = {
+          morning: {
+            label: "人类重启区",
+            range: "06:00-11:00",
+            gradient: "linear-gradient(135deg, #FFB88C, #FFE8D9)",
+            text: "#2A2A2A",
+          },
+          afternoon: {
+            label: "精神下班区",
+            range: "12:00-18:00",
+            gradient: "linear-gradient(135deg, #A0D8EF, #E5F3F9)",
+            text: "#2A2A2A",
+          },
+          evening: {
+            label: "终于轮到我了区",
+            range: "19:00-24:00",
+            gradient: "linear-gradient(135deg, #8B7EB8, #4A3F5C)",
+            text: "#E8E6F0",
+          },
+          midnight: {
+            label: "真实面暴露区",
+            range: "00:00-04:00",
+            gradient: "linear-gradient(135deg, #3A4D6B, #1A2332)",
+            text: "#B8C5D6",
+          },
+        };
+
+        var PERSONAS = {
+          m7: { id: "m7", title: "五分钟蜕变者", tag: "隐藏・自我提升", insight: "一口气想把人生重启完", desc: "短时高燃，目标感突然拉满" },
+          m8: { id: "m8", title: "闹钟逃亡者", tag: "隐藏・搞笑摆烂", insight: "醒来第一件事：躲进段子里", desc: "快速滑走现实，靠轻松内容续命" },
+          m1: { id: "m1", title: "今日重启自律人", tag: "治愈陪伴", insight: "慢慢找回秩序感", desc: "偏好治愈内容，滑动变慢更愿意停留" },
+          m2: { id: "m2", title: "起床失败选手", tag: "社会现实", insight: "人醒了，灵魂还没上线", desc: "快速浏览无偏好，互动极少" },
+          m4: { id: "m4", title: "元气活力达人", tag: "情绪鸡血", insight: "被鸡血点燃的早晨", desc: "会点赞，高能内容停留更久" },
+          m5: { id: "m5", title: "缓慢苏醒派", tag: "治愈陪伴", insight: "用温柔把自己唤醒", desc: "停留更久，节奏更平缓" },
+          m6: { id: "m6", title: "氛围感积极党", tag: "情绪鸡血", insight: "收藏比点赞更诚实", desc: "更爱把氛围存起来，停留偏短但会收藏" },
+          m3: { id: "m3", title: "早间通勤失神者", tag: "社会现实", insight: "机械上滑，脑内放空", desc: "停留稳定，互动为零，像在自动驾驶" },
+          n7: { id: "n7", title: "看透理想人生", tag: "隐藏・理想人生", insight: "盯着理想看得太久", desc: "长时沉浸，越看越清醒" },
+          n8: { id: "n8", title: "多巴胺补给者", tag: "隐藏・爽感刺激", insight: "只想快点爽一下", desc: "搞笑+刺激占比高，停留短、滑动快" },
+          n1: { id: "n1", title: "工位灵魂出走", tag: "理想人生", insight: "人还在，心早飞了", desc: "理想类突出，回滑复看更明显" },
+          n2: { id: "n2", title: "干饭电子榨菜", tag: "搞笑摆烂", insight: "笑一笑继续上班", desc: "切换频繁，搞笑类停留最长" },
+          n3: { id: "n3", title: "精神提前下班", tag: "理想人生", insight: "收藏理想，先下班再说", desc: "理想类可观时长且有收藏，滑动放慢" },
+          n4: { id: "n4", title: "午后状态麻木", tag: "社会现实", insight: "什么都看，但都不想看", desc: "时长普遍偏低、波动杂乱、无互动" },
+          n6: { id: "n6", title: "电量见底选手", tag: "治愈陪伴", insight: "需要一点温柔回血", desc: "治愈类最长且会点赞，滑动频次降低" },
+          n5: { id: "n5", title: "职场摸鱼达人", tag: "社会现实", insight: "边分心边刷，碎片化续命", desc: "滑动断断续续，内容碎片化" },
+          e7: { id: "e7", title: "昼夜双面人格", tag: "隐藏・深夜情绪", insight: "夜晚的我和白天不一样", desc: "深夜情绪+玄学偏高，停留显著变长" },
+          e8: { id: "e8", title: "犒劳治愈自己", tag: "隐藏・爽感刺激", insight: "刷点爽的奖励今天", desc: "刺激类最长且收藏，滑动放慢" },
+          e3: { id: "e3", title: "打工人晚间释怀", tag: "爽感刺激", insight: "刷完就算和今天和解", desc: "刺激类最长并点赞" },
+          e2: { id: "e2", title: "爱好精神续命", tag: "治愈陪伴", insight: "沉浸式投入喜欢的东西", desc: "收藏多且平均停留很久" },
+          e5: { id: "e5", title: "情绪慢慢散热", tag: "治愈陪伴", insight: "夜里把情绪放凉一点", desc: "治愈类最长，整体节奏偏慢" },
+          e6: { id: "e6", title: "夜游漫游行者", tag: "理想人生", insight: "越刷越想探索", desc: "理想+玄学合计最高，跨度大" },
+          e4: { id: "e4", title: "入夜切换人格", tag: "人格玄学", insight: "夜晚风格突然切换", desc: "整体时长偏高且点赞，风格差异明显" },
+          e1: { id: "e1", title: "白天伪装正常人", tag: "社会现实", insight: "白天演得像个正常人", desc: "晚间偏好反差大，互动更自然" },
+          l7: { id: "l7", title: "凌晨情绪遗民", tag: "隐藏・深夜情绪", insight: "留在夜里不肯走", desc: "深夜情绪+玄学总时长最高，持续沉浸" },
+          l8: { id: "l8", title: "深夜静音独处者", tag: "隐藏・治愈陪伴", insight: "不点赞不收藏，只安静看", desc: "治愈类最长，滑动极少，长停留静默" },
+          l1: { id: "l1", title: "情绪潜水玩家", tag: "深夜情绪", insight: "把情绪藏进深海里", desc: "平均停留很久并有回看" },
+          l2: { id: "l2", title: "赛博陪睡", tag: "人格玄学", insight: "需要一点陪伴感", desc: "切换很少，单条停留偏高" },
+          l3: { id: "l3", title: "凌晨想通人生", tag: "自我提升", insight: "深夜突然顿悟", desc: "提升+鸡血偏高且收藏，停留更深" },
+          l5: { id: "l5", title: "深夜回忆重播", tag: "深夜情绪", insight: "同一种情绪反复回放", desc: "平均时长较长且频繁回滑重播" },
+          l6: { id: "l6", title: "深夜无声观察员", tag: "治愈陪伴", insight: "静静旁观，不发一言", desc: "治愈偏高，慢滑无互动" },
+          l4: { id: "l4", title: "舍不得睡", tag: "人格玄学", insight: "今天还不想结束", desc: "内容杂乱无偏好，持续浏览不退出" },
+        };
+
+        var sessionStartedAt = Date.now();
+        var currentViewStartedAt = Date.now();
+        var playedSince = 0;
+        var totalDwellMs = 0;
+        var totalWatchMs = 0;
+        var swipeIntervals = [];
+        var lastSwipeAt = 0;
+        var backSwipeCount = 0;
+        var perCat = Object.create(null);
+
+        function ensureCat(cat) {
+          if (!perCat[cat]) perCat[cat] = { watchMs: 0, dwellMs: 0, views: 0 };
+          return perCat[cat];
+        }
+
+        function finalizeCurrentView() {
+          var now = Date.now();
+          var item = data[idx];
+          if (!item) return;
+
+          var dwell = Math.max(0, now - currentViewStartedAt);
+          totalDwellMs += dwell;
+          ensureCat(item.category).dwellMs += dwell;
+
+          if (playedSince) {
+            var w = Math.max(0, now - playedSince);
+            totalWatchMs += w;
+            ensureCat(item.category).watchMs += w;
+            playedSince = 0;
+          }
+        }
+
+        function enterView() {
+          currentViewStartedAt = Date.now();
+          var item = data[idx];
+          if (!item) return;
+          ensureCat(item.category).views += 1;
+        }
+
+        player.addEventListener("play", function () {
+          if (!playedSince) playedSince = Date.now();
+        });
+
+        player.addEventListener("pause", function () {
+          if (!playedSince) return;
+          var now = Date.now();
+          var item = data[idx];
+          if (!item) return;
+          var w = Math.max(0, now - playedSince);
+          totalWatchMs += w;
+          ensureCat(item.category).watchMs += w;
+          playedSince = 0;
+        });
+
+        player.addEventListener("ended", function () {
+          if (!playedSince) return;
+          var now = Date.now();
+          var item = data[idx];
+          if (!item) return;
+          var w = Math.max(0, now - playedSince);
+          totalWatchMs += w;
+          ensureCat(item.category).watchMs += w;
+          playedSince = 0;
+        });
+
+        function getPeriodByHour(hour) {
+          if (hour >= 6 && hour < 12) return "morning";
+          if (hour >= 12 && hour < 19) return "afternoon";
+          if (hour >= 19 && hour < 24) return "evening";
+          return "midnight";
+        }
+
+        function pad2(n) {
+          return String(n).padStart(2, "0");
+        }
+
+        function getDayKey(ts) {
+          var d = new Date(ts || Date.now());
+          return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+        }
+
+        function findPersonaForDayPeriod(store, dayKey, periodKey) {
+          if (!store || !Array.isArray(store.history)) return null;
+          for (var i = 0; i < store.history.length; i++) {
+            var it = store.history[i];
+            if (!it || !it.persona) continue;
+            if (it.dayKey === dayKey && it.periodKey === periodKey) return it;
+          }
+          return null;
+        }
+
+        function updatePersonaEntry() {
+          if (!personaEntry) return;
+          var store = loadJSON(STORAGE_PERSONA, null);
+          var dayKey = getDayKey(Date.now());
+          var periodKey = getPeriodByHour(new Date().getHours());
+          var existed = findPersonaForDayPeriod(store, dayKey, periodKey);
+          personaEntry.classList.toggle("has", !!(existed && existed.persona));
+        }
+
+        function mean(arr) {
+          if (!arr.length) return 0;
+          var s = 0;
+          for (var i = 0; i < arr.length; i++) s += arr[i];
+          return s / arr.length;
+        }
+
+        function stdRatio(arr) {
+          if (arr.length < 3) return 1;
+          var m = mean(arr);
+          if (!m) return 1;
+          var s = 0;
+          for (var i = 0; i < arr.length; i++) s += Math.pow(arr[i] - m, 2);
+          var v = Math.sqrt(s / arr.length);
+          return v / m;
+        }
+
+        function getPersonaImage(persona) {
+          var fn = PERSONA_IMAGES[persona.id] || persona.title + ".png";
+          return "./src/imports/" + fn;
+        }
+
+        function buildRoundInteractions() {
+          var likeTotal = 0;
+          var saveTotal = 0;
+          var likeByCat = Object.create(null);
+          var saveByCat = Object.create(null);
+
+          for (var i = 0; i < data.length; i++) {
+            var it = data[i];
+            if (liked[it.id]) {
+              likeTotal += 1;
+              likeByCat[it.category] = (likeByCat[it.category] || 0) + 1;
+            }
+            if (saved[it.id]) {
+              saveTotal += 1;
+              saveByCat[it.category] = (saveByCat[it.category] || 0) + 1;
+            }
+          }
+
+          return { likeTotal: likeTotal, saveTotal: saveTotal, likeByCat: likeByCat, saveByCat: saveByCat };
+        }
+
+        function buildCategoryMetrics() {
+          var ALL = ["治愈陪伴", "深夜情绪", "恋爱情感", "爽感刺激", "理想人生", "社会现实", "自我提升", "情绪鸡血", "搞笑摆烂", "人格玄学"];
+
+          var totalViews = 0;
+          for (var i = 0; i < ALL.length; i++) totalViews += (perCat[ALL[i]] && perCat[ALL[i]].views) || 0;
+          if (!totalViews) totalViews = data.length;
+
+          var useWatch = totalWatchMs > 1200;
+          var primaryTotal = 0;
+          var values = [];
+          var byCat = Object.create(null);
+
+          for (var i = 0; i < ALL.length; i++) {
+            var c = ALL[i];
+            var obj = perCat[c] || { watchMs: 0, dwellMs: 0, views: 0 };
+            var primary = useWatch ? obj.watchMs : obj.dwellMs;
+            primaryTotal += primary;
+            values.push(primary);
+            byCat[c] = {
+              watchMs: obj.watchMs || 0,
+              dwellMs: obj.dwellMs || 0,
+              views: obj.views || 0,
+              primaryMs: primary,
+            };
+          }
+
+          if (!primaryTotal) primaryTotal = 1;
+
+          var dominantCat = ALL[0];
+          var dominantMs = -1;
+          for (var i = 0; i < ALL.length; i++) {
+            var c = ALL[i];
+            if (byCat[c].primaryMs > dominantMs) {
+              dominantMs = byCat[c].primaryMs;
+              dominantCat = c;
+            }
+          }
+
+          var shares = [];
+          for (var i = 0; i < ALL.length; i++) shares.push(byCat[ALL[i]].primaryMs / primaryTotal);
+          var m = mean(shares);
+          var s = 0;
+          for (var i = 0; i < shares.length; i++) s += Math.pow(shares[i] - m, 2);
+          var cv = m ? Math.sqrt(s / shares.length) / m : 0;
+
+          return {
+            byCat: byCat,
+            dominantCat: dominantCat,
+            primaryTotalMs: primaryTotal,
+            useWatch: useWatch,
+            cv: cv,
+            totalViews: totalViews,
+          };
+        }
+
+        function loveShareFromResult(r) {
+          try {
+            if (!r || !r.stats || !r.stats.perCat) return 0;
+            var by = r.stats.perCat;
+            var love = by["恋爱情感"] ? by["恋爱情感"].primaryMs || 0 : 0;
+            var total = r.stats.primaryTotalMs;
+            if (!total) {
+              var keys = Object.keys(by);
+              total = 0;
+              for (var i = 0; i < keys.length; i++) total += by[keys[i]].primaryMs || 0;
+            }
+            if (!total) return 0;
+            return love / total;
+          } catch (e) {
+            return 0;
+          }
+        }
+
+        function decidePersona() {
+          var periodKey = getPeriodByHour(new Date().getHours());
+          var periodInfo = PERIOD_INFO[periodKey] || PERIOD_INFO.morning;
+          var dayKey = getDayKey(Date.now());
+
+          var inter = buildRoundInteractions();
+          var metrics = buildCategoryMetrics();
+
+          var avgStaySec = metrics.totalViews ? totalDwellMs / metrics.totalViews / 1000 : 0;
+          var avgSwipeSec = swipeIntervals.length ? mean(swipeIntervals) / 1000 : avgStaySec;
+          var mech = avgStaySec >= 3 && avgStaySec <= 5 && stdRatio(swipeIntervals) <= 0.22;
+          var quick = avgStaySec <= 2 && avgSwipeSec <= 1.8;
+          var slow = avgStaySec >= 6.5 || avgSwipeSec >= 4.5;
+          var hasRewatch = backSwipeCount > 0;
+
+          function share(cat) {
+            return metrics.byCat[cat] ? metrics.byCat[cat].primaryMs / metrics.primaryTotalMs : 0;
+          }
+
+          function avgStayCat(cat) {
+            var c = metrics.byCat[cat];
+            if (!c || !c.views) return 0;
+            return c.dwellMs / c.views / 1000;
+          }
+
+          var loveShare = share("恋爱情感");
+          var loveNotDominant = metrics.dominantCat !== "恋爱情感" && loveShare < 0.22;
+          var store = loadJSON(STORAGE_PERSONA, null);
+          var maxOtherLove = 0;
+          if (store && Array.isArray(store.history)) {
+            for (var i = 0; i < store.history.length; i++) {
+              var h = store.history[i];
+              if (!h || h.dayKey !== dayKey || h.periodKey === periodKey) continue;
+              var ls = loveShareFromResult(h);
+              if (ls > maxOtherLove) maxOtherLove = ls;
+            }
+          }
+          var loveNoticeablyHigher = loveShare >= Math.max(0.26, maxOtherLove + 0.08);
+
+          var personaId = "";
+
+          if (periodKey === "morning") {
+            if (metrics.dominantCat === "自我提升" && inter.saveTotal > 0 && avgStaySec >= 5) personaId = "m7";
+            else if (metrics.dominantCat === "搞笑摆烂" && inter.likeTotal === 0 && inter.saveTotal === 0 && quick) personaId = "m8";
+            else if (metrics.dominantCat === "治愈陪伴" && slow) personaId = "m1";
+            else if (metrics.cv < 0.25 && loveNotDominant && avgStaySec <= 2 && inter.likeTotal === 0 && inter.saveTotal === 0 && quick) personaId = "m2";
+            else if (metrics.dominantCat === "情绪鸡血" && inter.likeTotal > 0 && avgStayCat("情绪鸡血") >= 3 && avgStayCat("情绪鸡血") <= 4.5) personaId = "m4";
+            else if (share("治愈陪伴") >= 0.25 && avgStaySec >= 7 && slow) personaId = "m5";
+            else if (metrics.dominantCat === "情绪鸡血" && inter.saveTotal > inter.likeTotal && avgStayCat("情绪鸡血") > 0 && avgStayCat("情绪鸡血") < 3.2) personaId = "m6";
+            else if (metrics.cv < 0.28 && mech && inter.likeTotal === 0 && inter.saveTotal === 0) personaId = "m3";
+            else personaId = "m3";
+          } else if (periodKey === "afternoon") {
+            if (metrics.dominantCat === "理想人生" && avgStayCat("理想人生") >= 8) personaId = "n7";
+            else if (share("搞笑摆烂") + share("爽感刺激") >= 0.5 && inter.likeTotal === 0 && avgStaySec <= 3 && loveNotDominant) personaId = "n8";
+            else if (metrics.dominantCat === "理想人生" && hasRewatch) personaId = "n1";
+            else if (metrics.dominantCat === "搞笑摆烂" && avgSwipeSec <= 2.2) personaId = "n2";
+            else if (share("理想人生") >= 0.22 && inter.saveByCat["理想人生"] >= 1 && slow) personaId = "n3";
+            else if (avgStaySec <= 2.6 && inter.likeTotal === 0 && inter.saveTotal === 0) personaId = "n4";
+            else if (metrics.dominantCat === "治愈陪伴" && inter.likeByCat["治愈陪伴"] >= 1 && avgSwipeSec >= 2.8) personaId = "n6";
+            else personaId = "n5";
+          } else if (periodKey === "evening") {
+            if (share("自我提升") > 0 && share("深夜情绪") >= 0.18 && share("人格玄学") >= 0.18 && avgStaySec >= 7) personaId = "e7";
+            else if (metrics.dominantCat === "爽感刺激" && inter.saveTotal >= 1 && slow) personaId = "e8";
+            else if (metrics.dominantCat === "爽感刺激" && inter.likeTotal >= 1) personaId = "e3";
+            else if (inter.saveTotal >= 2 && avgStaySec >= 8) personaId = "e2";
+            else if (metrics.dominantCat === "治愈陪伴" && (avgStaySec >= 5 || slow)) personaId = "e5";
+            else if (share("理想人生") + share("人格玄学") >= 0.45) personaId = "e6";
+            else if (totalDwellMs / 1000 >= metrics.totalViews * 4 && inter.likeTotal >= 1 && loveNoticeablyHigher) personaId = "e4";
+            else personaId = "e1";
+          } else {
+            if (share("深夜情绪") + share("人格玄学") >= 0.55 && avgStaySec >= 8) personaId = "l7";
+            else if (metrics.dominantCat === "治愈陪伴" && inter.likeTotal === 0 && inter.saveTotal === 0 && avgSwipeSec >= 5 && avgStayCat("治愈陪伴") >= 8) personaId = "l8";
+            else if (metrics.dominantCat === "深夜情绪" && avgStayCat("深夜情绪") >= 10 && hasRewatch) personaId = "l1";
+            else if (metrics.dominantCat === "人格玄学" && avgStayCat("人格玄学") >= 8 && avgSwipeSec >= 5) personaId = "l2";
+            else if (share("自我提升") + share("情绪鸡血") >= 0.35 && inter.saveTotal >= 1 && avgStaySec >= 6) personaId = "l3";
+            else if (avgStaySec > 6 && hasRewatch) personaId = "l5";
+            else if (share("治愈陪伴") >= 0.25 && inter.likeTotal === 0 && inter.saveTotal === 0 && avgSwipeSec >= 4) personaId = "l6";
+            else personaId = "l4";
+          }
+
+          var persona = PERSONAS[personaId] || PERSONAS.m3;
+
+          var summary = "本轮主要偏好：" + metrics.dominantCat + " · 平均停留 " + avgStaySec.toFixed(1) + "s";
+          var personaImage = getPersonaImage(persona);
+
+          return {
+            ts: Date.now(),
+            dayKey: dayKey,
+            periodKey: periodKey,
+            periodLabel: periodInfo.label,
+            periodRange: periodInfo.range,
+            persona: persona,
+            personaImage: personaImage,
+            summary: summary,
+            stats: {
+              avgStaySec: avgStaySec,
+              avgSwipeSec: avgSwipeSec,
+              cv: metrics.cv,
+              loveShare: loveShare,
+              likeTotal: inter.likeTotal,
+              saveTotal: inter.saveTotal,
+              dominantCat: metrics.dominantCat,
+              perCat: metrics.byCat,
+              primaryTotalMs: metrics.primaryTotalMs,
+              backSwipeCount: backSwipeCount,
+              sessionSec: (Date.now() - sessionStartedAt) / 1000,
+            },
+          };
+        }
+
+        function applyPersonaCard(result) {
+          var periodKey = result.periodKey;
+          var periodInfo = PERIOD_INFO[periodKey] || PERIOD_INFO.morning;
+          var persona = result.persona;
+
+          if (personaKicker) personaKicker.textContent = periodInfo.label + " · " + periodInfo.range + " · " + persona.tag;
+          if (personaTitle) personaTitle.textContent = persona.title;
+          if (personaInsight) personaInsight.textContent = persona.insight;
+          if (personaDesc) personaDesc.textContent = persona.desc;
+
+          if (personaImg) {
+            personaImg.style.display = "none";
+            personaImg.onload = function () {
+              personaImg.style.display = "block";
+            };
+            personaImg.onerror = function () {
+              personaImg.style.display = "none";
+            };
+            personaImg.alt = persona.title;
+            personaImg.src = encodeURI(getPersonaImage(persona));
+          }
+
+          if (personaModalCard) {
+            personaModalCard.style.background = periodInfo.gradient;
+            personaModalCard.style.color = periodInfo.text;
+          }
+        }
+
+        function setStatus(t) {
+          statusText.textContent = t;
+        }
+
+        function showHint() {
+          hint.classList.add("on");
+          window.clearTimeout(showHint._t);
+          showHint._t = window.setTimeout(function () {
+            hint.classList.remove("on");
+          }, 1400);
+        }
+
+        function setTags(tags) {
+          while (tagsEl.firstChild) tagsEl.removeChild(tagsEl.firstChild);
+          for (var i = 0; i < tags.length; i++) {
+            var span = document.createElement("span");
+            span.className = "tag";
+            span.textContent = tags[i];
+            tagsEl.appendChild(span);
+          }
+        }
+
+        function pauseReset() {
+          try {
+            player.pause();
+            player.currentTime = 0;
+          } catch (e) {}
+        }
+
+        function playSafe() {
+          var p = player.play();
+          if (p && p.catch) {
+            p.catch(function () {
+              showHint();
+              setStatus("需要点击后播放");
+            });
+          }
+        }
+
+        function openModal() {
+          if (modalOpen) return;
+          finalizeCurrentView();
+          var store = loadJSON(STORAGE_PERSONA, { latest: null, history: [] });
+          if (!store || typeof store !== "object") store = { latest: null, history: [] };
+          if (!Array.isArray(store.history)) store.history = [];
+
+          var nowDay = getDayKey(Date.now());
+          var nowPeriod = getPeriodByHour(new Date().getHours());
+          var existed = findPersonaForDayPeriod(store, nowDay, nowPeriod);
+
+          var result = existed ? existed : decidePersona();
+          if (!existed) {
+            store.latest = result;
+            store.history.unshift(result);
+            store.history = store.history.slice(0, 60);
+            saveJSON(STORAGE_PERSONA, store);
+          }
+
+          applyPersonaCard(result);
+          updatePersonaEntry();
+          modalOpen = true;
+          personaModal.classList.add("on");
+          personaModal.setAttribute("aria-hidden", "false");
+          try {
+            player.pause();
+          } catch (e) {}
+        }
+
+        function closeModal() {
+          if (!modalOpen) return;
+          modalOpen = false;
+          personaModal.classList.remove("on");
+          personaModal.setAttribute("aria-hidden", "true");
+          playSafe();
+        }
+
+        function applyInteractions(item) {
+          likeBtn.classList.toggle("on", !!liked[item.id]);
+          saveBtn.classList.toggle("on", !!saved[item.id]);
+
+          likeCount.textContent = kFormat(item.likes + (liked[item.id] ? 1 : 0));
+          commentCount.textContent = kFormat(item.comments);
+          shareCount.textContent = kFormat(item.shares);
+          shareCount2.textContent = kFormat(item.shares + 88);
+        }
+
+        function applyItem(item) {
+          counter.textContent = idx + 1 + "/" + data.length;
+          categoryEl.textContent = item.category;
+          captionEl.textContent = item.caption;
+          setTags(item.tags);
+          applyInteractions(item);
+
+          setStatus("加载中…");
+          pauseReset();
+          player.src = encodeURI(item.src);
+          player.load();
+          playSafe();
+        }
+
+        function go(next) {
+          if (next < 0 || next >= data.length) return;
+          finalizeCurrentView();
+          idx = next;
+          stage.style.transition = "transform 180ms ease";
+          stage.style.transform = "translateY(0)";
+          applyItem(data[idx]);
+          enterView();
+        }
+
+        function noteSwipe(dir) {
+          var now = Date.now();
+          if (lastSwipeAt) swipeIntervals.push(now - lastSwipeAt);
+          lastSwipeAt = now;
+          if (dir === "down") backSwipeCount += 1;
+        }
+
+        function swipe(dir) {
+          if (modalOpen) return;
+          if (dir === "up") {
+            if (idx >= data.length - 1) {
+              noteSwipe("up");
+              openModal();
+              return;
+            }
+            noteSwipe("up");
+            go(idx + 1);
+          } else {
+            if (idx <= 0) return;
+            noteSwipe("down");
+            go(idx - 1);
+          }
+        }
+
+        player.addEventListener("loadedmetadata", function () {
+          setStatus("就绪");
+        });
+
+        player.addEventListener("error", function () {
+          setStatus("视频加载失败");
+          showHint();
+        });
+
+        stage.addEventListener("click", function (e) {
+          if (modalOpen) return;
+          if (actions && actions.contains(e.target)) return;
+          if (player.paused) {
+            playSafe();
+          } else {
+            player.pause();
+          }
+        });
+
+        likeBtn.addEventListener("click", function () {
+          var id = data[idx].id;
+          liked[id] = !liked[id];
+          saveJSON(STORAGE_INTERACTIONS, { liked: liked, saved: saved });
+          applyInteractions(data[idx]);
+        });
+
+        saveBtn.addEventListener("click", function () {
+          var id = data[idx].id;
+          saved[id] = !saved[id];
+          saveJSON(STORAGE_INTERACTIONS, { liked: liked, saved: saved });
+          applyInteractions(data[idx]);
+        });
+
+        personaModal.addEventListener("click", function (e) {
+          if (e.target === personaModal) closeModal();
+        });
+
+        personaModalCard.addEventListener("click", function (e) {
+          e.stopPropagation();
+        });
+
+        goSpaceBtn.addEventListener("click", function () {
+          window.location.href = "./current.html";
+        });
+
+        ignoreBtn.addEventListener("click", function () {
+          closeModal();
+        });
+
+        stage.addEventListener("touchstart", function (e) {
+          touchStartY = e.touches[0].clientY;
+          touchEndY = 0;
+        });
+
+        stage.addEventListener("touchmove", function (e) {
+          touchEndY = e.touches[0].clientY;
+        });
+
+        stage.addEventListener("touchend", function () {
+          if (!touchStartY || !touchEndY) return;
+          var d = touchStartY - touchEndY;
+          if (d > 50) swipe("up");
+          if (d < -50) swipe("down");
+        });
+
+        stage.addEventListener("wheel", function (e) {
+          if (e.deltaY > 0) swipe("up");
+          if (e.deltaY < 0) swipe("down");
+        });
+
+        window.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowDown") swipe("up");
+          if (e.key === "ArrowUp") swipe("down");
+        });
+
+        showHint();
+        applyItem(data[idx]);
+        enterView();
+        updatePersonaEntry();
+
+        window.addEventListener("pageshow", function (e) {
+          if (e && e.persisted) {
+            window.location.reload();
+            return;
+          }
+          try {
+            var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+            if (nav && nav.type === "back_forward") window.location.reload();
+          } catch (err) {}
+        });
+      })();
+    </script>
+  </body>
+</html>
+  
